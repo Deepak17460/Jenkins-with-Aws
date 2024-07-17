@@ -4,6 +4,9 @@ pipeline {
     environment {
         IMAGE_NAME = 'dpcode72/api'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        AWS_REGION = 'us-east-1'
+        ECR_REPO_URI = '730335663417.dkr.ecr.us-east-1.amazonaws.com/dpcode'
+        DOCKER_HUB_REPO = 'dpcode72/api'
     }
 
     stages {
@@ -27,12 +30,60 @@ pipeline {
             }
         }
 
-        stage('Docker Push') {
+        stage('ECR Login') {
+            steps {
+                script {
+                    sh '''
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}
+                    '''
+                }
+            }
+        }
+
+        stage('Docker Hub Login') {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'docker-login') {
-                        docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
+                        // No need to perform an additional step here, the login is done
                     }
+                }
+            }
+        }
+
+        stage('Tag Image for ECR') {
+            steps {
+                script {
+                    sh '''
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_REPO_URI}:${IMAGE_TAG}
+                    '''
+                }
+            }
+        }
+
+        stage('Tag Image for Docker Hub') {
+            steps {
+                script {
+                    sh '''
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:${IMAGE_TAG}
+                    '''
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    sh '''
+                        docker push ${ECR_REPO_URI}:${IMAGE_TAG}
+                    '''
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    docker.image("${DOCKER_HUB_REPO}:${IMAGE_TAG}").push()
                 }
             }
         }
