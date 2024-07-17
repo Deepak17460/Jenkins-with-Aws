@@ -33,9 +33,9 @@ pipeline {
         stage('ECR Login') {
             steps {
                 script {
-                    sh '''
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}
-                    '''
+                    withCredentials([awsSimpleCredentials(credentialsId: 'aws', region: "${AWS_REGION}")]) {
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
+                    }
                 }
             }
         }
@@ -44,7 +44,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'docker-login') {
-                        // No need to perform an additional step here, the login is done
+                        // No additional login step needed here, handled by withRegistry
                     }
                 }
             }
@@ -53,9 +53,7 @@ pipeline {
         stage('Tag Image for ECR') {
             steps {
                 script {
-                    sh '''
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_REPO_URI}:${IMAGE_TAG}
-                    '''
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_REPO_URI}:${IMAGE_TAG}"
                 }
             }
         }
@@ -63,9 +61,7 @@ pipeline {
         stage('Tag Image for Docker Hub') {
             steps {
                 script {
-                    sh '''
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:${IMAGE_TAG}
-                    '''
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
                 }
             }
         }
@@ -73,9 +69,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    sh '''
-                        docker push ${ECR_REPO_URI}:${IMAGE_TAG}
-                    '''
+                    sh "docker push ${ECR_REPO_URI}:${IMAGE_TAG}"
                 }
             }
         }
