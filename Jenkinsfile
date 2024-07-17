@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'dpcode72/api'
+        IMAGE_NAME = 'dpcode'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        AWS_ACCOUNT_ID = '730335663417'
         AWS_REGION = 'us-east-1'
-        ECR_REPO_URI = '730335663417.dkr.ecr.us-east-1.amazonaws.com/dpcode'
-        DOCKER_HUB_REPO = 'dpcode72/api'
+        ECR_REPOSITORY = 'dpcode'
     }
 
     stages {
@@ -30,54 +30,22 @@ pipeline {
             }
         }
 
-        stage('ECR Login') {
+        stage('Login to ECR') {
             steps {
                 script {
-                    withAWS(credentials: 'aws', region: "${AWS_REGION}") {
-                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}"
+                    withAWS(region: "${AWS_REGION}", credentials: 'aws-credentials-id') {
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
                     }
                 }
             }
         }
 
-        stage('Docker Hub Login') {
+        stage('Docker Push') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-login') {
-                        // No additional login step needed here, handled by withRegistry
+                    docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", '') {
+                        docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
                     }
-                }
-            }
-        }
-
-        stage('Tag Image for ECR') {
-            steps {
-                script {
-                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_REPO_URI}:${IMAGE_TAG}"
-                }
-            }
-        }
-
-        stage('Tag Image for Docker Hub') {
-            steps {
-                script {
-                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
-                }
-            }
-        }
-
-        stage('Push to ECR') {
-            steps {
-                script {
-                    sh "docker push ${ECR_REPO_URI}:${IMAGE_TAG}"
-                }
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    docker.image("${DOCKER_HUB_REPO}:${IMAGE_TAG}").push()
                 }
             }
         }
@@ -87,7 +55,7 @@ pipeline {
                 script {
                     sh 'docker stop dpcode || true'
                     sh 'docker rm dpcode || true'
-                    sh "docker run -d --name dpcode -p 8000:8080 ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker run -d --name dpcode -p 8000:8080 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
                 }
             }
         }
