@@ -1,7 +1,8 @@
 ---
 - name: Install Docker
   hosts: all
-  become: true  
+  become: true 
+
   tasks:
     - name: Install Docker prerequisites
       apt:
@@ -23,7 +24,7 @@
       apt:
         update_cache: yes
         name: docker-ce docker-ce-cli containerd.io
-        state: latest
+        state: present
 
     - name: Install Docker module for Python
       pip:
