@@ -8,6 +8,7 @@
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
+        url_fallback: yes
 
     - name: Add Docker Repository
       apt_repository:
