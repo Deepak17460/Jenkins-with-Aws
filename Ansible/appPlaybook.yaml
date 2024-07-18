@@ -1,13 +1,12 @@
 ---
 - hosts: all
-  become_user: root
   become: true
   vars:
     ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Install Docker collection
-      ansible.builtin.command:
-        cmd: ansible-galaxy collection install community.docker
+      command: ansible-galaxy collection install community.docker
+      changed_when: false
 
     - name: Add Docker GPG apt Key
       apt_key:
