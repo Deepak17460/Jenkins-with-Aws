@@ -18,7 +18,7 @@ pipeline {
                         dir('Terraform') {
                             sh 'terraform init'
                             sh 'terraform validate'
-                            sh "terraform ${params.ACTION} -var 'public_key=$(cat $PUBLIC_KEY_FILE)' -auto-approve"
+                            sh "terraform ${params.ACTION} -var \"public_key=\$(cat \$PUBLIC_KEY_FILE)\" -auto-approve"
                             if (params.ACTION == 'apply') {
                                 def ip_address = sh(script: 'terraform output public_ip', returnStdout: true).trim()
                                 writeFile file: '../Ansible/inventory', text: "monitoring-server ansible_host=${ip_address}"
