@@ -5,6 +5,10 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
   tasks:
+    - name: Install Docker collection
+      ansible.builtin.ansible.builtin.command:
+        cmd: ansible-galaxy collection install community.docker
+
     - name: Add Docker GPG apt Key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
@@ -32,12 +36,12 @@
         name: six
 
     - name: Pull the custom Docker image
-      docker_image:
+      community.docker.docker_image:
         name: dpcode72/java:1.0
         source: pull
 
     - name: Run the custom Docker container
-      docker_container:
+      community.docker.docker_container:
         name: java_com_app
         image: dpcode72/java:1.0
         state: started
