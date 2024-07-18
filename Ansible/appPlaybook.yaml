@@ -1,0 +1,40 @@
+---
+- hosts: all
+  become_user: root
+  become: true
+  tasks:
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
+    - name: Update apt and install docker-ce and unzip
+      apt:
+        update_cache: yes
+        name:
+          - docker-ce
+          - unzip
+        state: latest
+
+    - name: Install Docker module for Python
+      pip:
+        name: docker
+
+    - name: Pull the custom Docker image
+      docker_image:
+        name: dpcode72/java:1.0
+        source: pull
+
+    - name: Run the custom Docker container
+      docker_container:
+        name: java_com_app
+        image: dpcode72/java:1.0
+        state: started
+        restart_policy: always
+        published_ports:
+          - "8004:8080"
