@@ -25,6 +25,10 @@
       pip:
         name: docker
 
+    - name: Install six module for Python
+      pip:
+        name: six
+
     - name: Pull the custom Docker image
       docker_image:
         name: dpcode72/java:1.0
