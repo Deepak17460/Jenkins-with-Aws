@@ -10,9 +10,11 @@ pipeline {
         stage('Terraform') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'publicKeyFile', variable: 'PUBLIC_KEY_FILE'),
-                                     string(credentialsId: 'awsAccessKeyId', variable: 'AWS_ACCESS_KEY_ID'),
-                                     string(credentialsId: 'awsSecretAccessKey', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    withCredentials([
+                        file(credentialsId: 'publicKeyFile', variable: 'PUBLIC_KEY_FILE'),
+                        string(credentialsId: 'awsAccessKeyId', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'awsSecretAccessKey', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
                         dir('Terraform') {
                             sh 'terraform init'
                             sh 'terraform validate'
