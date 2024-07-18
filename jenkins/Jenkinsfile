@@ -4,6 +4,7 @@ pipeline {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'What action should Terraform take?')
     }
     environment {
+        AWS_ACCESS_KEY_ID = credentials('aws')
         // Define any environment variables if needed
     }
     stages {
