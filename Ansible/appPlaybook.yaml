@@ -6,7 +6,7 @@
     ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: Install Docker collection
-      ansible.builtin.ansible.builtin.command:
+      ansible.builtin.command:
         cmd: ansible-galaxy collection install community.docker
 
     - name: Add Docker GPG apt Key
