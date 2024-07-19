@@ -83,7 +83,8 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'sshCredentials', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
                     dir('Ansible') {
-                        sh "ansible-playbook -i inventory appPlaybook.yaml --private-key=$SSH_KEY -u $SSH_USER"
+                        //sh "ansible-playbook -i inventory appPlaybook.yaml --private-key=$SSH_KEY -u $SSH_USER"
+                          sh "ansible-playbook -i inventory appPlaybook.yaml --extra-vars \"docker_image_name=${IMAGE_NAME} docker_image_tag=${IMAGE_TAG}\" --private-key=$SSH_KEY -u $SSH_USER"
                     }
                 }
             }
