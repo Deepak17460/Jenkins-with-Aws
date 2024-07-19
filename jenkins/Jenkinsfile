@@ -3,6 +3,10 @@ pipeline {
     parameters {
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'What action should Terraform take?')
     }
+    environment {
+        IMAGE_NAME = 'dpcode72/java'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
     stages {
         stage('Terraform') {
             steps {
@@ -17,7 +21,6 @@ pipeline {
                             sh 'terraform validate'
                             sh "terraform ${params.ACTION} -var \"public_key=\$(cat \$PUBLIC_KEY_FILE)\" -auto-approve"
                             if (params.ACTION == 'apply') {
-                                // Update this line to use the correct output variable name
                                 def ip_address = sh(script: 'terraform output -raw aws_instance_public_ip', returnStdout: true).trim()
                                 writeFile file: '../Ansible/inventory', text: "monitoring-server ansible_host=${ip_address}"
                             }
@@ -33,7 +36,43 @@ pipeline {
             steps {
                 script {
                     echo 'Waiting for SSH agent...'
-                    sleep 120 // waits for 120 seconds before continuing
+                    sleep 120
+                }
+            }
+        }
+        stage('Java-Build') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                dir('Application') {
+                    sh 'mvn clean package'
+                }
+            }
+        }
+        stage('Docker-Image') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                script {
+                    dir('Application') {
+                        sh """
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        """
+                    }
+                }
+            }
+        }
+        stage('Docker-Push') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-login') {
+                        docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
+                    }
                 }
             }
         }
@@ -55,7 +94,6 @@ pipeline {
             }
             steps {
                 script {
-                    // Ensure this line matches the output variable name in Terraform
                     def ip_address = sh(script: 'terraform -chdir=Terraform output -raw aws_instance_public_ip', returnStdout: true).trim()
                     def java_url = "http://${ip_address}:8004"
                     echo "Java URL: ${java_url}"
