@@ -1,7 +1,14 @@
 - name: Install Docker
   hosts: all
   become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
+    - name: Install Python
+      yum:
+        name: python3
+        state: present
+
     - name: Update all packages
       yum:
         name: '*'
