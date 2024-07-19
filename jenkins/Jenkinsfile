@@ -20,6 +20,7 @@ pipeline {
                             sh 'terraform init'
                             sh 'terraform validate'
                             sh "terraform ${params.ACTION} -var \"public_key=\$(cat \$PUBLIC_KEY_FILE)\" -auto-approve"
+                            
                             if (params.ACTION == 'apply') {
                                 def ip_address = sh(script: 'terraform output -raw aws_instance_public_ip', returnStdout: true).trim()
                                 writeFile file: '../Ansible/inventory', text: "monitoring-server ansible_host=${ip_address}"
@@ -83,8 +84,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'sshCredentials', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
                     dir('Ansible') {
-                        //sh "ansible-playbook -i inventory appPlaybook.yaml --private-key=$SSH_KEY -u $SSH_USER"
-                          sh "ansible-playbook -i inventory appPlaybook.yaml --extra-vars \"docker_image_name=${IMAGE_NAME} docker_image_tag=${IMAGE_TAG}\" --private-key=$SSH_KEY -u $SSH_USER"
+                        sh "ansible-playbook -i inventory appPlaybook.yaml --extra-vars \"docker_image_name=${IMAGE_NAME} docker_image_tag=${IMAGE_TAG}\" --private-key=$SSH_KEY -u $SSH_USER"
                     }
                 }
             }
@@ -95,10 +95,17 @@ pipeline {
             }
             steps {
                 script {
-                    def ip_address = sh(script: 'terraform -chdir=Terraform output -raw aws_instance_public_ip', returnStdout: true).trim()
-                    def java_url = "http://${ip_address}:8004"
-                    echo "Java URL: ${java_url}"
-                    writeFile file: 'urls.txt', text: "Java URL: ${java_url}"
+                    withCredentials([
+                        string(credentialsId: 'awsAccessKeyId', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'awsSecretAccessKey', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+                        dir('Terraform') {
+                            def ip_address = sh(script: 'terraform output -raw aws_instance_public_ip', returnStdout: true).trim()
+                            def java_url = "http://${ip_address}:8004"
+                            echo "Java URL: ${java_url}"
+                            writeFile file: 'urls.txt', text: "Java URL: ${java_url}"
+                        }
+                    }
                 }
             }
         }
