@@ -55,7 +55,7 @@ resource "aws_key_pair" "dpcode_key" {
 }
 
 resource "aws_instance" "dpcode" {
-  ami           = "ami-04a81a99f5ec58529"
+  ami           = "ami-0b72821e2f351e396"
   instance_type = "t2.micro"
   subnet_id     = var.subnet_id
   associate_public_ip_address = true
