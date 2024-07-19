@@ -9,7 +9,7 @@ terraform {
   backend "s3" {
     bucket  = "dpcode72"
     key     = "terraform/terraform.tfstate"
-    region  = "var.region"
+    region  = "us-east-1"
     encrypt = true
     acl     = "bucket-owner-full-control"
   }
