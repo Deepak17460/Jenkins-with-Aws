@@ -5,6 +5,14 @@ terraform {
       version = "5.54.1"
     }
   }
+
+  backend "s3" {
+    bucket  = "dpcode72"
+    key     = "terraform/terraform.tfstate"
+    region  = "var.region"
+    encrypt = true
+    acl     = "bucket-owner-full-control"
+  }
 }
 
 provider "aws" {
