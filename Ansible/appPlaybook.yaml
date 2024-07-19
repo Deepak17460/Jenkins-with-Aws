@@ -8,7 +8,7 @@
         state: latest
 
     - name: Install Docker
-      amazon_linux:
+      yum:
         name: docker
         state: present
 
