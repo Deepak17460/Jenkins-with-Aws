@@ -8,6 +8,21 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
     stages {
+        stage('Create S3 Bucket') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                script {
+                    withCredentials([
+                        string(credentialsId: 'awsAccessKeyId', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'awsSecretAccessKey', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+                        sh 'aws s3api create-bucket --bucket dpcode72 --region us-east-1'
+                    }
+                }
+            }
+        }
         stage('Terraform') {
             steps {
                 script {
@@ -24,9 +39,9 @@ pipeline {
                             if (params.ACTION == 'apply') {
                                 def ip_address = sh(script: 'terraform output -raw aws_instance_public_ip', returnStdout: true).trim()
                                 writeFile file: '../Ansible/inventory', text: "monitoring-server ansible_host=${ip_address}"
-                                sh 'aws s3api create-bucket --bucket dpcode72 --region us-east-1'
                             }
                             if (params.ACTION == 'destroy') {
+                                // Delete S3 bucket
                                 sh 'aws s3 rm s3://dpcode72 --recursive'
                                 sh 'aws s3 rb s3://dpcode72 --force'
                             }
