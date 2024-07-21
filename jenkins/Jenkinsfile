@@ -24,6 +24,11 @@ pipeline {
                             if (params.ACTION == 'apply') {
                                 def ip_address = sh(script: 'terraform output -raw aws_instance_public_ip', returnStdout: true).trim()
                                 writeFile file: '../Ansible/inventory', text: "monitoring-server ansible_host=${ip_address}"
+                                sh 'aws s3api create-bucket --bucket dpcode72 --region us-east-1'
+                            }
+                            if (params.ACTION == 'destroy') {
+                                sh 'aws s3 rm s3://dpcode72 --recursive'
+                                sh 'aws s3 rb s3://dpcode72 --force'
                             }
                         }
                     }
