@@ -18,7 +18,10 @@ pipeline {
                         string(credentialsId: 'awsAccessKeyId', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'awsSecretAccessKey', variable: 'AWS_SECRET_ACCESS_KEY')
                     ]) {
-                        sh 'aws s3api create-bucket --bucket dpcode72 --region us-east-1'
+                        sh '''
+                        export PATH=$PATH:/usr/local/bin
+                        aws s3api create-bucket --bucket dpcode72 --region us-east-1
+                        '''
                     }
                 }
             }
@@ -42,8 +45,11 @@ pipeline {
                             }
                             if (params.ACTION == 'destroy') {
                                 // Delete S3 bucket
-                                sh 'aws s3 rm s3://dpcode72 --recursive'
-                                sh 'aws s3 rb s3://dpcode72 --force'
+                                sh '''
+                                export PATH=$PATH:/usr/local/bin
+                                aws s3 rm s3://dpcode72 --recursive
+                                aws s3 rb s3://dpcode72 --force
+                                '''
                             }
                         }
                     }
