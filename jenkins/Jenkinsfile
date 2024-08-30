@@ -4,7 +4,11 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Deepak17460/Jenkins-with-Aws.git'
+                git(
+                    url: 'https://github.com/Deepak17460/Jenkins-with-Aws.git', 
+                    branch: 'main',
+                    credentialsId: '' 
+                )
             }
         }
 
